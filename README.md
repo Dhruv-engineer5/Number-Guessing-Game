@@ -1,7 +1,21 @@
-# Number Guessing Game
+# 🎯 Number Guessing Game
 
-This is my first Python project.
+A beginner-friendly Python project where the computer randomly generates a number between 1 and 100, and the player tries to guess it.
 
-It is a simple game where the computer chooses a random number and the user tries to guess it.
+## Features
+- 🎲 Random number generation
+- 🔁 Unlimited guesses
+- 📊 Tracks all guesses
+- 🐍 Built with Python
 
-Created by Dhruv Ghodasara.
+## Technologies Used
+- Python 3
+
+## How to Run
+
+```bash
+python "Number Guessing Game.py"
+```
+
+## Author
+Dhruv Ghodasara
