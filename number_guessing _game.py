@@ -1,6 +1,6 @@
 import random
 
-print("Welcome to Number Guessing Game!")
+print("Hi,Welcome to Number Guessing Game!")
 
 secret_number = random.randint(1, 100)
 guesses = []
