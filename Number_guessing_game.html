@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signal Tuner — Number Guessing Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0B0F17;
+    --panel: #121926;
+    --panel-2: #182234;
+    --border: #263248;
+    --text: #E8EBF1;
+    --muted: #7C879B;
+    --cold: #2EC4B6;
+    --cold-dim: #12403C;
+    --hot: #FF9F1C;
+    --hot-dim: #4A340C;
+    --win: #4ADE80;
+    --win-dim: #123B22;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+
+  .console {
+    width: 100%;
+    max-width: 460px;
+  }
+
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--cold);
+    margin: 0 0 6px;
+  }
+
+  h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 30px;
+    font-weight: 700;
+    margin: 0 0 8px;
+    letter-spacing: -0.01em;
+  }
+
+  .sub {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0 0 28px;
+  }
+
+  .sub b { color: var(--text); font-weight: 500; }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 26px 24px;
+  }
+
+  /* --- Dial --- */
+  .dial-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto 6px;
+  }
+
+  #needle {
+    transform-origin: 160px 160px;
+    transition: transform 0.6s cubic-bezier(.34,1.56,.64,1);
+  }
+
+  .dial-readout {
+    position: absolute;
+    top: 108px;
+    left: 0;
+    right: 0;
+    text-align: center;
+  }
+
+  .dial-readout .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 40px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .dial-readout .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  .scale-ends {
+    display: flex;
+    justify-content: space-between;
+    max-width: 320px;
+    margin: 0 auto 22px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    padding: 0 6px;
+  }
+
+  /* --- Feedback --- */
+  .feedback {
+    min-height: 22px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 18px;
+    transition: color 0.2s;
+  }
+
+  .feedback.cold { color: var(--cold); }
+  .feedback.hot { color: var(--hot); }
+  .feedback.win { color: var(--win); }
+  .feedback.idle { color: var(--muted); }
+
+  /* --- Controls --- */
+  .controls {
+    display: flex;
+    gap: 10px;
+  }
+
+  input[type="number"] {
+    flex: 1;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    padding: 12px 14px;
+    outline: none;
+    min-width: 0;
+  }
+
+  input[type="number"]:focus {
+    border-color: var(--cold);
+    box-shadow: 0 0 0 3px var(--cold-dim);
+  }
+
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  button {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 22px;
+    cursor: pointer;
+    transition: transform 0.08s, opacity 0.15s;
+  }
+
+  button:active { transform: scale(0.97); }
+
+  #scanBtn {
+    background: var(--cold);
+    color: #06231F;
+  }
+
+  #scanBtn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  #resetBtn {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    margin-top: 14px;
+    display: none;
+  }
+
+  #resetBtn.show { display: block; }
+
+  /* --- History --- */
+  .history {
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+  }
+
+  .history-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .chip {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 5px 10px;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    background: var(--panel-2);
+  }
+
+  .chip.cold { border-color: var(--cold-dim); color: var(--cold); }
+  .chip.hot { border-color: var(--hot-dim); color: var(--hot); }
+  .chip.win { border-color: var(--win-dim); color: var(--win); background: var(--win-dim); }
+
+  .empty-hint {
+    color: var(--muted);
+    font-size: 13px;
+    font-style: normal;
+  }
+</style>
+</head>
+<body>
+
+<div class="console">
+  <p class="eyebrow">Signal tuner</p>
+  <h1>Lock onto the frequency</h1>
+  <p class="sub">A hidden frequency is broadcasting somewhere between <b>1</b> and <b>100</b>. Tune your scanner and follow the heat to find it.</p>
+
+  <div class="panel">
+    <div class="dial-wrap">
+      <svg id="dial" viewBox="0 0 320 190" width="100%">
+        <defs>
+          <linearGradient id="arcGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#2EC4B6"/>
+            <stop offset="50%" stop-color="#5B7A8C"/>
+            <stop offset="100%" stop-color="#FF9F1C"/>
+          </linearGradient>
+        </defs>
+        <path d="M 30 160 A 130 130 0 0 1 290 160" fill="none" stroke="#1B2534" stroke-width="14" stroke-linecap="round"/>
+        <path d="M 30 160 A 130 130 0 0 1 290 160" fill="none" stroke="url(#arcGradient)" stroke-width="14" stroke-linecap="round" opacity="0.55"/>
+        <g id="tickmarks"></g>
+        <g id="needle">
+          <line x1="160" y1="160" x2="160" y2="48" stroke="#E8EBF1" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="160" cy="160" r="7" fill="#E8EBF1"/>
+        </g>
+      </svg>
+      <div class="dial-readout">
+        <div class="num" id="lastGuess">--</div>
+        <div class="label" id="attemptsLabel">Awaiting first scan</div>
+      </div>
+    </div>
+    <div class="scale-ends"><span>1</span><span>100</span></div>
+
+    <div class="feedback idle" id="feedback">Enter a number to begin scanning.</div>
+
+    <div class="controls">
+      <input type="number" id="guessInput" min="1" max="100" placeholder="1–100" autocomplete="off">
+      <button id="scanBtn">Scan</button>
+    </div>
+
+    <button id="resetBtn">Scan a new frequency</button>
+
+    <div class="history">
+      <div class="history-label">Scan history</div>
+      <div class="chips" id="chips">
+        <span class="empty-hint">No scans yet.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let secretNumber = randomInt(1, 100);
+  let guesses = [];
+  let won = false;
+
+  const guessInput = document.getElementById('guessInput');
+  const scanBtn = document.getElementById('scanBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const feedback = document.getElementById('feedback');
+  const chips = document.getElementById('chips');
+  const needle = document.getElementById('needle');
+  const lastGuessEl = document.getElementById('lastGuess');
+  const attemptsLabel = document.getElementById('attemptsLabel');
+  const tickmarks = document.getElementById('tickmarks');
+
+  function randomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function angleForValue(v) {
+    // maps 1-100 to -90deg .. +90deg across the semicircle
+    const t = (v - 1) / 99;
+    return -90 + t * 180;
+  }
+
+  function pointOnArc(v) {
+    const angle = (angleForValue(v) - 90) * (Math.PI / 180);
+    const r = 130;
+    const cx = 160, cy = 160;
+    return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
+  }
+
+  function addTick(value, cls) {
+    const p = pointOnArc(value);
+    const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    dot.setAttribute('cx', p.x);
+    dot.setAttribute('cy', p.y);
+    dot.setAttribute('r', 4);
+    let color = '#7C879B';
+    if (cls === 'cold') color = '#2EC4B6';
+    if (cls === 'hot') color = '#FF9F1C';
+    if (cls === 'win') color = '#4ADE80';
+    dot.setAttribute('fill', color);
+    dot.setAttribute('opacity', '0.9');
+    tickmarks.appendChild(dot);
+  }
+
+  function setFeedback(text, cls) {
+    feedback.textContent = text;
+    feedback.className = 'feedback ' + cls;
+  }
+
+  function addChip(value, cls) {
+    if (chips.querySelector('.empty-hint')) chips.innerHTML = '';
+    const chip = document.createElement('span');
+    chip.className = 'chip ' + cls;
+    chip.textContent = value;
+    chips.appendChild(chip);
+  }
+
+  function submitGuess() {
+    if (won) return;
+    const raw = guessInput.value;
+    if (raw === '') return;
+    const guess = parseInt(raw, 10);
+    if (isNaN(guess) || guess < 1 || guess > 100) {
+      setFeedback('Enter a whole number between 1 and 100.', 'hot');
+      return;
+    }
+
+    guesses.push(guess);
+    needle.style.transform = `rotate(${angleForValue(guess)}deg)`;
+    lastGuessEl.textContent = guess;
+    attemptsLabel.textContent = guesses.length === 1 ? '1 attempt' : `${guesses.length} attempts`;
+
+    if (guess === secretNumber) {
+      won = true;
+      setFeedback(`Locked on! The frequency was ${secretNumber}.`, 'win');
+      addChip(guess, 'win');
+      addTick(guess, 'win');
+      scanBtn.disabled = true;
+      guessInput.disabled = true;
+      resetBtn.classList.add('show');
+    } else if (guess < secretNumber) {
+      setFeedback('Too low — signal is stronger higher up.', 'cold');
+      addChip(guess, 'cold');
+      addTick(guess, 'cold');
+    } else {
+      setFeedback('Too high — signal is stronger lower down.', 'hot');
+      addChip(guess, 'hot');
+      addTick(guess, 'hot');
+    }
+
+    guessInput.value = '';
+    guessInput.focus();
+  }
+
+  function resetGame() {
+    secretNumber = randomInt(1, 100);
+    guesses = [];
+    won = false;
+    scanBtn.disabled = false;
+    guessInput.disabled = false;
+    resetBtn.classList.remove('show');
+    lastGuessEl.textContent = '--';
+    attemptsLabel.textContent = 'Awaiting first scan';
+    setFeedback('Enter a number to begin scanning.', 'idle');
+    chips.innerHTML = '<span class="empty-hint">No scans yet.</span>';
+    tickmarks.innerHTML = '';
+    needle.style.transform = 'rotate(0deg)';
+    guessInput.value = '';
+    guessInput.focus();
+  }
+
+  scanBtn.addEventListener('click', submitGuess);
+  resetBtn.addEventListener('click', resetGame);
+  guessInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') submitGuess();
+  });
+
+  guessInput.focus();
+</script>
+
+</body>
+</html>
