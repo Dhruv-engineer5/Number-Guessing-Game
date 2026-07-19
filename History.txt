@@ -1,0 +1,3 @@
+com's guess:4
+Your guess:[30, 20, 10, 1, 2, 3, 4]
+
